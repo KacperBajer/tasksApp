@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.defaultButton {
+  @apply flex items-center gap-2 text-sm text-dark-500 rounded-lg border border-dark-200 py-1.5 px-4
+}
