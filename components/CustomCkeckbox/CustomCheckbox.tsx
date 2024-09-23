@@ -1,13 +1,13 @@
 'use client'
-import { useState } from "react";
+import { ChangeEventHandler, useState } from "react";
 
+type Props = {
+  id?: number,
+  isChecked: boolean,
+  handleChange: ChangeEventHandler,
+}
 
-const CustomCheckbox = () => {
-    const [isChecked, setIsChecked] = useState(true);
-
-    const handleCheckboxChange = () => {
-      setIsChecked(!isChecked);
-    };
+const CustomCheckbox = ({id, isChecked, handleChange}: Props) => {
   
     return (
       <div className="inline-flex items-center">
@@ -15,7 +15,7 @@ const CustomCheckbox = () => {
           <input
             type="checkbox"
             checked={isChecked}
-            onChange={handleCheckboxChange}
+            onChange={handleChange}
             className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-dark-500 checked:bg-slate-800 checked:border-slate-800"
             id="check"
           />
