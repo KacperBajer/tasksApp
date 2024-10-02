@@ -15,6 +15,8 @@ import { deleteTasks } from '@/lib/tasks';
 import PriorityFilterPopup from '@/components/PriorityFilterPopup/PriorityFilterPopup';
 import StatusFilterPopup from '@/components/StatusFilterPopup/StatusFilterPopup';
 import { sortTasksFunc } from '@/lib/sortTask';
+import { CiLogout } from "react-icons/ci";
+import { useRouter } from 'next/navigation';
 
 type ResponseData = {
   data: Task[],
@@ -24,6 +26,8 @@ type ResponseData = {
 export type SortMode = "Priority" | "PriorityReverse" | "Section" | "SectionReverse" | "Status" | "StatusReverse" | null
 
 const page = () => {
+
+  const router = useRouter()
 
   const [page, setPage] = useState<number>(1)
   const [itemsPerPage, setItemsPerPage] = useState<number>((itemsPerPageOptions[0].value as number))
@@ -119,6 +123,10 @@ const page = () => {
     }
   };
 
+  const logout = () => {
+    document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    router.push('/login')
+  }
 
   return (
     <>
@@ -167,20 +175,14 @@ const page = () => {
 
           </div>
 
-          <div className='flex gap-4 items-center'>
+          <div className='flex gap-4 mr-3 items-center'>
             {selectedItems?.length >= 1 && <MdDelete style={{ color: '#dc2626' }} className='hover:cursor-pointer' onClick={deleteSelectedTasks} />}
             <button onClick={() => setShowAddTaskPopup(true)} className='defaultButton'>
               <CiCirclePlus style={{ fontSize: '18px' }} />
               <p>New</p>
             </button>
-            <button className='defaultButton'>
-              <VscSettings style={{ fontSize: '18px' }} />
-              <p>View</p>
-            </button>
 
-            <div className='rounded-full bg-dark-200 p-2.5 hover:cursor-pointer'>
-              <FaUserAlt style={{ fontSize: '14px', color: '#c5c5c7' }} />
-            </div>
+            <CiLogout onClick={logout} style={{fontSize: '22px', color: '#dc2626'}} className='hover:cursor-pointer' />
           </div>
 
         </section>
