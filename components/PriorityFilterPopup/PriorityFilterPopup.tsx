@@ -9,7 +9,7 @@ type Props = {
     priorityFilter: Priority | null
 }
 
-const PriorityFiltrPopup = ({setShowPopup, setPriorityFilter, priorityFilter}: Props) => {
+const PriorityFilterPopup = ({setShowPopup, setPriorityFilter, priorityFilter}: Props) => {
   return (
     <>
         <div onClick={() => setShowPopup(false)} className='fixed w-full h-full top-0 left-0 z-[40] bg-black/80 '></div>
@@ -21,4 +21,4 @@ const PriorityFiltrPopup = ({setShowPopup, setPriorityFilter, priorityFilter}: P
 )
 }
 
-export default PriorityFiltrPopup
+export default PriorityFilterPopup

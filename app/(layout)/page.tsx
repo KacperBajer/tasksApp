@@ -1,5 +1,5 @@
 'use client'
-import TaskTable, { Priority, Task } from '@/components/TaskTable/TaskTable'
+import TaskTable, { Priority, Status, Task } from '@/components/TaskTable/TaskTable'
 import React, { useEffect, useState } from 'react'
 import { VscSettings } from "react-icons/vsc";
 import { FaUserAlt } from "react-icons/fa";
@@ -12,14 +12,16 @@ import AddTaskPopup from '@/components/AddTaskPopup/AddTaskPopup';
 import { toast, ToastContainer } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
 import { deleteTasks } from '@/lib/tasks';
-import PriorityFiltrPopup from '@/components/PriorityFiltrPopup/PriorityFiltrPopup';
-import { IoIosClose } from 'react-icons/io'
+import PriorityFilterPopup from '@/components/PriorityFilterPopup/PriorityFilterPopup';
+import StatusFilterPopup from '@/components/StatusFilterPopup/StatusFilterPopup';
+import { sortTasksFunc } from '@/lib/sortTask';
 
 type ResponseData = {
   data: Task[],
   isNextPage: boolean,
   totalRows: number
 }
+export type SortMode = "Priority" | "PriorityReverse" | "Section" | "SectionReverse" | "Status" | "StatusReverse" | null
 
 const page = () => {
 
@@ -32,7 +34,11 @@ const page = () => {
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [showAddTaskPopup, setShowAddTaskPopup] = useState(false)
   const [priorityFilter, setPriorityFilter] = useState<Priority | null>(null)
+  const [statusFilter, setStatusFilter] = useState<Status | null>(null)
   const [showPriorityPopup, setShowPriorityPopup] = useState(false)
+  const [showStatusPopup, setShowStatusPopup] = useState(false)
+  const [filterInput, setFilterInput] = useState('')
+  const [sortMode, setSortMode] = useState<SortMode>()
 
   const fetchTasks = async () => {
     try {
@@ -40,7 +46,10 @@ const page = () => {
         method: "GET",
         headers: {
           'page': page.toString(),
-          'itemsPerPage': itemsPerPage.toString()
+          'itemsPerPage': itemsPerPage.toString(),
+          'priorityFilter': (priorityFilter as string),
+          'statusFilter': (statusFilter as string),
+          'titleFilter': filterInput
         }
       });
       const result: ResponseData = await response.json()
@@ -54,14 +63,18 @@ const page = () => {
 
   const deleteSelectedTasks = async () => {
     const ans = await deleteTasks(selectedItems)
-    if(ans === 200) {
-        toast.success('Success!')
-        setSelectedItems([])
-        fetchTasks()
+    if (ans === 200) {
+      toast.success('Success!')
+      setSelectedItems([])
+      fetchTasks()
     } else {
-        toast.error('Error!')
+      toast.error('Error!')
     }
   }
+
+  useEffect(() => {
+    setShowStatusPopup(false)
+  }, [statusFilter])
 
   useEffect(() => {
     setShowPriorityPopup(false)
@@ -69,7 +82,7 @@ const page = () => {
 
   useEffect(() => {
     fetchTasks()
-  }, [page]);
+  }, [page, statusFilter, priorityFilter]);
 
   useEffect(() => {
     if (data.length > 0) {
@@ -82,6 +95,18 @@ const page = () => {
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
+
+  const handleSort = (sortBy: "Priority" | "Status" | "Section") => {
+    if(sortBy === sortMode) {
+      const reverse = data.reverse()
+      setData(reverse)
+      setSortMode(`${sortBy}Reverse`)
+    } else {
+      const sortedData = sortTasksFunc(data, sortBy)
+      setSortMode(sortBy)
+      setData(sortedData)
+    }
+  }
 
   const handleSelectAllChange = () => {
     if (selectAll) {
@@ -98,7 +123,8 @@ const page = () => {
   return (
     <>
       {showAddTaskPopup && <AddTaskPopup fetchTasks={fetchTasks} setShowPopup={setShowAddTaskPopup} />}
-      {showPriorityPopup && <PriorityFiltrPopup priorityFilter={priorityFilter} setShowPopup={setShowPriorityPopup} setPriorityFilter={setPriorityFilter}/>}
+      {showPriorityPopup && <PriorityFilterPopup priorityFilter={priorityFilter} setShowPopup={setShowPriorityPopup} setPriorityFilter={setPriorityFilter} />}
+      {showStatusPopup && <StatusFilterPopup statusFilter={statusFilter} setShowPopup={setShowStatusPopup} setStatusFilter={setStatusFilter} />}
       <ToastContainer
         position="top-center"
         autoClose={5000}
@@ -111,28 +137,38 @@ const page = () => {
         pauseOnHover
         theme="dark"
       />
-      <div className='p-10 flex flex-col gap-5'>
+      <div className='py-10 px-3 flex flex-col gap-5'>
 
-        <section className='flex justify-between items-center'>
-          <div className='flex gap-4'>
-            <input
-              className='bg-transparent appearance-none inset-0 py-1.5 px-4 border border-solid border-dark-200 placeholder:text-dark-300 rounded-lg outline-none text-sm'
-              placeholder='Filter tasks...'
-            />
+        <section className='flex flex-col gap-3 md:flex-row md:justify-between md:items-center'>
+          <div className='flex flex-col md:flex-row gap-4'>
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              fetchTasks()
+            }}>
+              <input
+                className='bg-transparent appearance-none inset-0 py-1.5 px-4 border border-solid border-dark-200 placeholder:text-dark-300 rounded-lg outline-none text-sm'
+                placeholder='Filter tasks...'
+                value={filterInput}
+                onChange={(e) => setFilterInput(e.target.value)}
+              />
+            </form>
 
-            <button className='defaultButton border-dashed'>
-              <CiCirclePlus style={{ fontSize: '18px' }} />
-              <p>Status</p>
-            </button>
+            <div className='flex gap-4'>
+              <button onClick={() => setShowStatusPopup(prev => !prev)} className='defaultButton border-dashed'>
+                <CiCirclePlus style={{ fontSize: '18px' }} />
+                <p>{statusFilter || 'Status'}</p>
+              </button>
 
-            <button onClick={() => setShowPriorityPopup(prev => !prev)} className='defaultButton border-dashed'>
-              {priorityFilter ? <IoIosClose /> : <CiCirclePlus style={{ fontSize: '18px' }} />}
-              <p>{priorityFilter || 'Priority'}</p>
-            </button>
+              <button onClick={() => setShowPriorityPopup(prev => !prev)} className='defaultButton border-dashed'>
+                <CiCirclePlus style={{ fontSize: '18px' }} />
+                <p>{priorityFilter || 'Priority'}</p>
+              </button>
+            </div>
+
           </div>
 
           <div className='flex gap-4 items-center'>
-            {selectedItems?.length >= 1 && <MdDelete style={{color: '#dc2626'}} className='hover:cursor-pointer' onClick={deleteSelectedTasks} />}
+            {selectedItems?.length >= 1 && <MdDelete style={{ color: '#dc2626' }} className='hover:cursor-pointer' onClick={deleteSelectedTasks} />}
             <button onClick={() => setShowAddTaskPopup(true)} className='defaultButton'>
               <CiCirclePlus style={{ fontSize: '18px' }} />
               <p>New</p>
@@ -149,13 +185,13 @@ const page = () => {
 
         </section>
 
-        <TaskTable fetchTasks={fetchTasks} handleSelectAllChange={handleSelectAllChange} selectAll={selectAll} data={data} selectedItems={selectedItems} handleCheckboxChange={handleCheckboxChange} />
+        <TaskTable handleSort={handleSort} fetchTasks={fetchTasks} handleSelectAllChange={handleSelectAllChange} selectAll={selectAll} data={data} selectedItems={selectedItems} handleCheckboxChange={handleCheckboxChange} />
 
-        <section className='flex justify-between items-center px-4 text-sm text-dark-500'>
+        <section className='flex flex-col md:flex-row gap-3 md:justify-between md:items-center px-4 text-sm text-dark-500'>
 
           <p className=''>{selectedItems.length} of {totalRows} row(s) selected.</p>
 
-          <div className='flex items-center gap-1.5'>
+          <div className='flex flex-col md:flex-row gap-3 md:items-center md:gap-10'>
 
             <div className='flex gap-2 items-center'>
               <p>Rows per page</p>
@@ -164,23 +200,26 @@ const page = () => {
               </div>
             </div>
 
-            <p className='mx-10'>Page {page} of {Math.ceil(totalRows / itemsPerPage) || 1}</p>
+            <div className='flex gap-2 items-center'>
+              <p className=''>Page {page} of {Math.ceil(totalRows / itemsPerPage) || 1}</p>
 
-            <button onClick={() => setPage(1)} disabled={page === 1} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
-              <MdKeyboardDoubleArrowLeft style={{ color: page !== 1 ? '#ffffff' : '' }} />
-            </button>
+              <button onClick={() => setPage(1)} disabled={page === 1} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
+                <MdKeyboardDoubleArrowLeft style={{ color: page !== 1 ? '#ffffff' : '' }} />
+              </button>
 
-            <button onClick={() => setPage(prev => prev - 1)} disabled={page === 1} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
-              <MdArrowForwardIos style={{ rotate: '180deg', color: page !== 1 ? '#ffffff' : '' }} />
-            </button>
+              <button onClick={() => setPage(prev => prev - 1)} disabled={page === 1} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
+                <MdArrowForwardIos style={{ rotate: '180deg', color: page !== 1 ? '#ffffff' : '' }} />
+              </button>
 
-            <button onClick={() => setPage(prev => prev + 1)} disabled={!isNextPage} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
-              <MdArrowForwardIos style={{ rotate: '0deg', color: isNextPage ? '#ffffff' : '' }} />
-            </button>
+              <button onClick={() => setPage(prev => prev + 1)} disabled={!isNextPage} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
+                <MdArrowForwardIos style={{ rotate: '0deg', color: isNextPage ? '#ffffff' : '' }} />
+              </button>
 
-            <button onClick={() => setPage(totalRows / itemsPerPage)} disabled={!isNextPage} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
-              <MdKeyboardDoubleArrowLeft style={{ rotate: '180deg', color: isNextPage ? '#ffffff' : '' }} />
-            </button>
+              <button onClick={() => setPage(totalRows / itemsPerPage)} disabled={!isNextPage} className="p-2 border border-dark-200 rounded-lg hover:cursor-pointer">
+                <MdKeyboardDoubleArrowLeft style={{ rotate: '180deg', color: isNextPage ? '#ffffff' : '' }} />
+              </button>
+            </div>
+           
 
           </div>
 

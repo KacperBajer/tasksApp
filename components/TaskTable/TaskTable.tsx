@@ -11,19 +11,20 @@ import { FaRegTimesCircle } from "react-icons/fa";
 import { FaArrowRight } from "react-icons/fa";
 import MoreBox from '../MoreBox/MoreBox';
 import EditTaskPopup from '../EditTaskPopup/EditTaskPopup';
-import ConfirmPopup from '../ConfirmDeletePopup/ConfirmDeletePopup';
 import { createTask, deleteTasks } from '@/lib/tasks';
 import ConfirmDeletePopup from '../ConfirmDeletePopup/ConfirmDeletePopup';
 import { toast } from 'react-toastify';
+import { SortMode } from '@/app/(layout)/page';
 
-type Status = 'In progress' | 'Done' | 'Canceled' | 'To do' | 'Backlog'
+export type Status = 'In progress' | 'Done' | 'Canceled' | 'To do' | 'Backlog'
 export type Priority = 'High' | 'Medium' | 'Low'
+export type Section = 'Documentation' | 'Bug' | 'Feature'
 export type Task = {
     id: number,
     task: string;
     title: string;
     status: Status;
-    section: 'Documentation' | 'Bug' | 'Feature';
+    section: Section;
     priority: Priority;
 };
 
@@ -34,9 +35,10 @@ type TaskTableProps = {
     selectAll: boolean
     handleSelectAllChange: Function
     fetchTasks: () => void
+    handleSort: (sortBy: "Priority" | "Status" | "Section") => void
 }
 
-const TaskTable = ({ data, selectedItems, handleCheckboxChange, selectAll, handleSelectAllChange, fetchTasks }: TaskTableProps) => {
+const TaskTable = ({ data, handleSort, selectedItems, handleCheckboxChange, selectAll, handleSelectAllChange, fetchTasks }: TaskTableProps) => {
 
     const [moreBoxPosition, setMoreBoxPosition] = useState<{ top: number, left: number } | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -103,19 +105,19 @@ const TaskTable = ({ data, selectedItems, handleCheckboxChange, selectAll, handl
                     <div className='px-5 py-2 min-w-[400px] flex-1'>
                         <div className='flex items-center gap-2'>
                             <p className='text-left font-normal'>Title</p>
-                            <FaSort />
+                            <FaSort onClick={() => handleSort("Section")} className='hover:cursor-pointer' />
                         </div>
                     </div>
                     <div className='px-5 py-2 w-[150px]'>
                         <div className='flex items-center gap-2'>
                             <p className='text-left font-normal'>Status</p>
-                            <FaSort />
+                            <FaSort onClick={() => handleSort("Status")} className='hover:cursor-pointer' />
                         </div>
                     </div>
                     <div className='px-5 py-2 w-[130px]'>
                         <div className='flex items-center gap-2'>
                             <p className='text-left font-normal'>Priority</p>
-                            <FaSort />
+                            <FaSort onClick={() => handleSort("Priority")} className='hover:cursor-pointer' />
                         </div>
                     </div>
                     <div className='pr-5 pl-7 py-2 text-xl font-normal w-[70px]'>

@@ -2,29 +2,56 @@
 import { Pool } from "pg"
 import conn from "./db"
 
-export const getTasks = async (page: number, itemsPerPage: number) => {
+export const getTasks = async (page: number, itemsPerPage: number, priorityFilter: string | null, statusFilter: string | null, titleFilter: string) => {
     try {
-        
-        const countQuery = 'SELECT COUNT(*) FROM tasks';
-        const countResult = await (conn as Pool).query(countQuery);
+
+        let whereConditions: string[] = [];
+        let whereConditionsCountQuery: string[] = [];
+        let queryParams: any[] = [itemsPerPage, page * itemsPerPage];
+
+        if (priorityFilter) {
+            whereConditions.push(`priority = $${queryParams.length + 1}`);
+            whereConditionsCountQuery.push(`priority = $${queryParams.length - 1}`);
+            queryParams.push(priorityFilter);
+        }
+
+        if (statusFilter) {
+            whereConditions.push(`status = $${queryParams.length + 1}`);
+            whereConditionsCountQuery.push(`status = $${queryParams.length - 1}`);
+            queryParams.push(statusFilter);
+        }
+
+        if (titleFilter) {
+            whereConditions.push(`title ILIKE $${queryParams.length + 1}`);
+            whereConditionsCountQuery.push(`title ILIKE $${queryParams.length - 1}`);
+            queryParams.push(`%${titleFilter}%`); 
+        }
+
+        const whereClause = whereConditions.length ? ' WHERE ' + whereConditions.join(' AND ') : '';  
+        const whereClauseCountQuery = whereConditionsCountQuery.length ? ' WHERE ' + whereConditionsCountQuery.join(' AND ') : '';  
+
+        const countQuery = `SELECT COUNT(*) FROM tasks${whereClauseCountQuery}`;
+        const countParams = queryParams.slice(2); 
+        const countResult = await (conn as Pool).query(countQuery, countParams);
         const totalRows = countResult.rows[0].count;
 
-        const query = 'SELECT * FROM tasks ORDER BY id DESC LIMIT $1 OFFSET $2'
-        const response = await (conn as Pool).query(query, [itemsPerPage, page*itemsPerPage])
-        
+        const query = `SELECT * FROM tasks${whereClause} ORDER BY id DESC LIMIT $1 OFFSET $2`;
+        const response = await (conn as Pool).query(query, queryParams);
+
         return {
             data: response.rows,
-            isNextPage: page*itemsPerPage + itemsPerPage < totalRows,
+            isNextPage: page * itemsPerPage + itemsPerPage < totalRows,
             totalRows: totalRows
-        }
+        };
     } catch (error) {
+        console.log(error)
         return {
             data: [],
             isNextPage: false,
             totalRows: 0
-        }
+        };
     }
-}
+};
 export const createTask = async (task: string, title: string, status: string, section: string, priority: string) => {
 
     try {

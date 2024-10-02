@@ -100,3 +100,35 @@ export const filterPriorityOptions: selectboxOption[] = [
     value: 'High'
   },
 ]
+export const filterStatusOptions: selectboxOption[] = [
+  {
+    id: 1,
+    text: 'All',
+    value: null
+  },
+  {
+    id: 2,
+    text: 'In progress',
+    value: 'In progress'
+  },
+  {
+    id: 3,
+    text: 'Done',
+    value: 'Done'
+  },
+  {
+    id: 4,
+    text: 'Canceled',
+    value: 'Canceled'
+  },
+  {
+    id: 5,
+    text: 'To do',
+    value: 'To do'
+  }, 
+  {
+    id: 6,
+    text: 'Backlog',
+    value: 'Backlog'
+  }
+]
