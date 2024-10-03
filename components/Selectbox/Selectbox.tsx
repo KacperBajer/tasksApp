@@ -9,7 +9,7 @@ export type selectboxOption = {
 }
 
 type Props = {
-    selected: string | number,
+    selected: string | number | null,
     setSelected: Function,
     options: selectboxOption[],
 }
