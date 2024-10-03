@@ -8,8 +8,8 @@ const page = () => {
     const router = useRouter()
 
     const [inputValue, setInputValue] = useState({
-        'login': '',
-        'password': ''
+        login: '',
+        password: ''
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,6 +20,7 @@ const page = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
+      console.log(inputValue.login, inputValue.password)
       const auth = await loginUser(inputValue.login, inputValue.password)
       if(auth === 'err') {
         console.log('err')

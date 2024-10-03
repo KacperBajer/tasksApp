@@ -4,6 +4,7 @@ import conn from "./db";
 import { setSession } from "./session";
 
 export const loginUser = async (login : string, password: string) => {
+  console.log(login, password)
     try {   
         const query = 'SELECT * FROM users WHERE login = $1 AND password = $2'
   
